@@ -18,19 +18,19 @@ import os
 ua = UserAgent()
 
 #设置cookies
-cookie = ("_lxsdk_cuid=162760423dfc8-0801f141cb0731-3b60490d-e1000-162760423dfc8; "
-          "_lxsdk=162760423dfc8-0801f141cb0731-3b60490d-e1000-162760423dfc8; "
-          "_hc.v=af7219c3-2b99-8bb8-f9b2-7b1d9be7f29e.1522398406; "
+cookie = ("_lxsdk_cuid=18f140237dcc8-0233cb317ee2a8-4c657b58-190140-18f140237dcc8; "
+          "_lxsdk=18f140237dcc8-0233cb317ee2a8-4c657b58-190140-18f140237dcc8; "
+          "_hc.v=5aed5439-6a4d-e693-2a27-1f47e19b99b9.1714027642; "
           "s_ViewType=10; "
-          "ua=%E4%BB%A4%E7%8B%90%E5%86%B2; "
-          "ctu=029e953356caf94d20233d299a70d285a03cb64585c371690b17d3e59c4c075c; "
-          "cye=guangzhou; "
-          "Hm_lvt_e6f449471d3527d58c46e24efb4c343e=1531964746; "
-          "cy=4; "
-          "dper=8c6ae023e893759ea57ce154028f1800be56b69450806b893b9cf5c6b6c3e3ba3c986c9a603bcbf9a7fb18dcd2038cf704b3e3baba3532bc7dffec965fe5e6c3b2479ca21c6577a1f5636088acbba8936df6ac994e02a923a907907a938559f9; "
+          "ua=%E5%93%88%E5%93%88%E5%93%88; "
+          "ctu=161c08166efc15e81c2300a4a485cf164138cf1a127f729c648cc006f2ab3e96; "
+          "cye=hangzhou; "
+          "Hm_lvt_e6f449471d3527d58c46e24efb4c343e=1714027739; "
+          "cy=3; "
+          "dper=0202362124ccf5b4b324a3d11d54f89c49246d8cd3403c17e98d731c31511324160265da59720d101b22c292fc005d35d2480c3f97e2e682c3ed00000000a32000004520cff69c0f82cff91794a0cec0d48da7155ea233ee048607a33fa43328d69451c3de5938c302d116392b7d3db9c266; "
           "ll=7fd06e815b796be3df069dec7836c3df; "
           "_lx_utm=utm_source%3DBaidu%26utm_medium%3Dorganic; "
-          "_lxsdk_s=1661889a264-50e-66f-22a%7C%7C276")
+          "_lxsdk_s=190050d6ebd-e29-f5c-870%7C%7C60")
 
 #修改请求头
 headers = {
