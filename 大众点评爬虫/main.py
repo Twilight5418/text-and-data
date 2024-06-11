@@ -150,7 +150,8 @@ def delete_file(filename):
         print(f"错误：无法删除文件 {filename}。错误信息：{e}")
 
 #根据店铺id，店铺页码进行爬取
-def craw_comment(shopID='521698',page = 1):
+def craw_comment(shopID='521698',page = 5):
+    delete_file(xuchuan.txt)
     shop_url = "http://www.dianping.com/shop/" + shopID + "/review_all/"
     #读取断点续传中的续传断点
     nowpage = xuchuan()
