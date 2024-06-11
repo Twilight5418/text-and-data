@@ -18,7 +18,19 @@ import os
 ua = UserAgent()
 
 #设置cookies
-cookie = "_lxsdk_cuid=162760423dfc8-0801f141cb0731-3b60490d-e1000-162760423dfc8; _lxsdk=162760423dfc8-0801f141cb0731-3b60490d-e1000-162760423dfc8; _hc.v=af7219c3-2b99-8bb8-f9b2-7b1d9be7f29e.1522398406; s_ViewType=10; ua=%E4%BB%A4%E7%8B%90%E5%86%B2; ctu=029e953356caf94d20233d299a70d285a03cb64585c371690b17d3e59c4c075c; cye=guangzhou; Hm_lvt_e6f449471d3527d58c46e24efb4c343e=1531964746; cy=4; dper=8c6ae023e893759ea57ce154028f1800be56b69450806b893b9cf5c6b6c3e3ba3c986c9a603bcbf9a7fb18dcd2038cf704b3e3baba3532bc7dffec965fe5e6c3b2479ca21c6577a1f5636088acbba8936df6ac994e02a923a907907a938559f9; ll=7fd06e815b796be3df069dec7836c3df; _lx_utm=utm_source%3DBaidu%26utm_medium%3Dorganic; _lxsdk_s=1661889a264-50e-66f-22a%7C%7C276"
+cookie = ("_lxsdk_cuid=162760423dfc8-0801f141cb0731-3b60490d-e1000-162760423dfc8; "
+          "_lxsdk=162760423dfc8-0801f141cb0731-3b60490d-e1000-162760423dfc8; "
+          "_hc.v=af7219c3-2b99-8bb8-f9b2-7b1d9be7f29e.1522398406; "
+          "s_ViewType=10; "
+          "ua=%E4%BB%A4%E7%8B%90%E5%86%B2; "
+          "ctu=029e953356caf94d20233d299a70d285a03cb64585c371690b17d3e59c4c075c; "
+          "cye=guangzhou; "
+          "Hm_lvt_e6f449471d3527d58c46e24efb4c343e=1531964746; "
+          "cy=4; "
+          "dper=8c6ae023e893759ea57ce154028f1800be56b69450806b893b9cf5c6b6c3e3ba3c986c9a603bcbf9a7fb18dcd2038cf704b3e3baba3532bc7dffec965fe5e6c3b2479ca21c6577a1f5636088acbba8936df6ac994e02a923a907907a938559f9; "
+          "ll=7fd06e815b796be3df069dec7836c3df; "
+          "_lx_utm=utm_source%3DBaidu%26utm_medium%3Dorganic; "
+          "_lxsdk_s=1661889a264-50e-66f-22a%7C%7C276")
 
 #修改请求头
 headers = {
@@ -123,7 +135,7 @@ def xuchuan():
     return nowpage
 
 #根据店铺id，店铺页码进行爬取
-def craw_comment(shopID='521698',page = 53):
+def craw_comment(shopID='521698',page = 10):
     shop_url = "http://www.dianping.com/shop/" + shopID + "/review_all/"
     #读取断点续传中的续传断点
     nowpage = xuchuan()
