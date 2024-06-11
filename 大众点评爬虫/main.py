@@ -72,34 +72,38 @@ def remove_emoji(text):
     return highpoints.sub(u'',text)
 
 #从html中提起所需字段信息
-def parsePage(html,shpoID):
-    infoList = [] #用于存储提取后的信息，列表的每一项都是一个字典
+def parsePage(html, shopID):
+    infoList = []  # 用于存储提取后的信息，列表的每一项都是一个字典
     soup = BeautifulSoup(html, "html.parser")
-    
-    for item in soup('div','main-review'):
-        cus_id = item.find('a','name').text.strip()
-        comment_time = item.find('span','time').text.strip()
+
+    for item in soup.find_all('div', class_='main-review'):
+        cus_id = item.find('a', class_='name').text.strip()
+        comment_time = item.find('span', class_='time').text.strip()
         try:
-            comment_star = item.find('span',re.compile('sml-rank-stars')).get('class')[1]
+            comment_star = item.find('span', class_=re.compile('sml-rank-stars')).get('class')[1]
         except:
             comment_star = 'NAN'
-        cus_comment = item.find('div',"review-words").text.strip()
-        scores = str(item.find('span','score'))
+
+        cus_comment = item.find('div', class_="review-words").text.strip()
+        scores = str(item.find('span', class_='score'))
+
         try:
-            kouwei = re.findall(r'口味：([\u4e00-\u9fa5]*)',scores)[0]
-            huanjing = re.findall(r'环境：([\u4e00-\u9fa5]*)',scores)[0]
-            fuwu = re.findall(r'服务：([\u4e00-\u9fa5]*)',scores)[0]
-        except:
+            kouwei = re.search(r'口味：(\d+)', scores).group(1)
+            huanjing = re.search(r'环境：(\d+)', scores).group(1)
+            fuwu = re.search(r'服务：(\d+)', scores).group(1)
+        except AttributeError:
             kouwei = huanjing = fuwu = '无'
-        
-        infoList.append({'cus_id':cus_id,
-                         'comment_time':comment_time,
-                         'comment_star':comment_star,
-                         'cus_comment':remove_emoji(cus_comment),
-                         'kouwei':kouwei,
-                         'huanjing':huanjing,
-                         'fuwu':fuwu,
-                         'shopID':shpoID})
+
+        infoList.append({
+            'cus_id': cus_id,
+            'comment_time': comment_time,
+            'comment_star': comment_star,
+            'cus_comment': remove_emoji(cus_comment),
+            'kouwei': kouwei,
+            'huanjing': huanjing,
+            'fuwu': fuwu,
+            'shopID': shopID
+        })
     return infoList
 
 #构造每一页的url，并且对爬取的信息进行存储
@@ -134,8 +138,19 @@ def xuchuan():
         nowpage = 0
     return nowpage
 
+def delete_file(filename):
+    try:
+        os.remove(filename)
+        print(f"文件 {filename} 已成功删除")
+    except FileNotFoundError:
+        print(f"错误：文件 {filename} 未找到")
+    except PermissionError:
+        print(f"错误：没有权限删除文件 {filename}")
+    except Exception as e:
+        print(f"错误：无法删除文件 {filename}。错误信息：{e}")
+
 #根据店铺id，店铺页码进行爬取
-def craw_comment(shopID='521698',page = 10):
+def craw_comment(shopID='521698',page = 1):
     shop_url = "http://www.dianping.com/shop/" + shopID + "/review_all/"
     #读取断点续传中的续传断点
     nowpage = xuchuan()
