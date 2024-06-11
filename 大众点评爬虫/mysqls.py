@@ -30,7 +30,7 @@ db = pymysql.connect(
 )
 cursor = db.cursor()
 
-creat_table(cursor)
+
 #存储爬取到的数据
 def save_data(data_dict):
     sql = '''INSERT INTO DZDP(cus_id,comment_time,comment_star,cus_comment,kouwei,huanjing,fuwu,shopID) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)'''
