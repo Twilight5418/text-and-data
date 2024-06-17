@@ -59,8 +59,21 @@ def save_data(data_dict):
                  ,data_dict['fuwu']
                  ,data_dict['shopID']
                  )
+    sql_comments = '''INSERT INTO 评论(应用id, 评论内容, 口味, 环境, 服务, 评分, 评论用户id, 商店id, 评论日期) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)'''
+    value_tup_comments = (
+        25,
+        data_dict['cus_comment'],
+        data_dict['kouwei'],
+        data_dict['huanjing'],
+        data_dict['fuwu'],
+        data_dict['comment_star'],
+        data_dict['cus_id'],
+        data_dict['shopID'],
+        data_dict['comment_time']
+    )
     try:
         cursor.execute(sql,value_tup)
+        cursor.execute(sql_comments, value_tup_comments)
         db.commit()
     except:
         print('数据库写入失败')
