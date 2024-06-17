@@ -27,6 +27,24 @@ def ciyun(shop_ID='all'):#词云寻找
     plt.imshow(wc, interpolation="bilinear")  # 作图
     plt.axis("off")  # 不显示坐标轴
 
+# 加载模型
+tv2 = joblib.load('tfidf_vectorizer.pkl')
+clf = joblib.load('naive_bayes_model.pkl')
+
+# 加载停用词
+infile = open("stopwords.txt", encoding='utf-8')
+stopwords_lst = infile.readlines()
+stopwords = [x.strip() for x in stopwords_lst]
+
+# 中文分词函数
+def fenci(train_data):
+    words_df = train_data.apply(lambda x: ' '.join(jieba.cut(x)))
+    return words_df
+
+# 定义分析函数
+def fenxi(strings):
+    strings_fenci = fenci(pd.Series([strings]))
+    return float(clf.predict_proba(tv2.transform(strings_fenci))[:, 1])
 # 创建数据库连接
 engine = create_engine("mysql+pymysql://root:5457hzcx@localhost/TESTDB")
 
@@ -90,25 +108,7 @@ data['shopID'].unique()
 ciyun('521698')
 plt.show()
 
-# 加载模型
-tv2 = joblib.load('tfidf_vectorizer.pkl')
-clf = joblib.load('naive_bayes_model.pkl')
 
-# 加载停用词
-infile = open("stopwords.txt", encoding='utf-8')
-stopwords_lst = infile.readlines()
-stopwords = [x.strip() for x in stopwords_lst]
-
-# 中文分词函数
-def fenci(train_data):
-    words_df = train_data.apply(lambda x: ' '.join(jieba.cut(x)))
-    return words_df
-
-# 定义分析函数
-def fenxi(strings):
-    strings_fenci = fenci(pd.Series([strings]))
-    return float(clf.predict_proba(tv2.transform(strings_fenci))[:, 1])
-
-# 测试评论
+# 评论情感分析
 test_comment = '糯米外皮不绵滑，豆沙馅粗躁，没有香甜味。12元一碗不值。'
 print(fenxi(test_comment))
