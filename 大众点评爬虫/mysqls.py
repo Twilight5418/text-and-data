@@ -21,6 +21,22 @@ def creat_table(cursor):
             );'''
     cursor.execute(sql)
 
+    cursor.execute("DROP TABLE IF EXISTS 评论")
+    sql = '''CREATE TABLE 评论(
+            评论id INT AUTO_INCREMENT PRIMARY KEY,
+            应用id varchar(100),
+            评论内容 text,
+            口味 varchar(55),
+            环境 varchar(55),
+            服务 varchar(55),
+            评分 varchar(55),
+            评论用户id varchar(100),
+            商店id varchar(55),
+            评论日期 varchar(55)
+            );'''
+    cursor.execute(sql)
+
+
 #连接MYSQL数据库
 db = pymysql.connect(
     host="localhost",
