@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, toRaw } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import { Register } from '@/types/user';
@@ -72,15 +72,29 @@ const rules: FormRules = {
     email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }],
 };
 const register = ref<FormInstance>();
-const submitForm = (formEl: FormInstance | undefined) => {
+    const submitForm = async (formEl: FormInstance | undefined) => {
     if (!formEl) return;
-    formEl.validate((valid: boolean) => {
+    formEl.validate(async (valid: boolean) => {
         if (valid) {
-            
-
-            ElMessage.success('注册成功，请登录');
-            router.push('/login');
+            try {
+                // 这里使用 toRaw 将响应式对象转换为普通对象
+                const rawParam = toRaw(param);
+                const res = await request.post('/api/register', rawParam);
+                console.log(res);
+                
+                if (res.data.code === 200) {
+                    ElMessage.success('注册成功，请登录');
+                    router.push('/login');
+                } else {
+                    const errorMessage = res && res.data && res.data.message ? res.data.message : '注册失败';
+                    ElMessage.error(errorMessage);
+                }
+            } catch (error) {
+                console.error('请求失败', error);
+                ElMessage.error('注册失败');
+            }
         } else {
+            ElMessage.error('表单验证失败');
             return false;
         }
     });

@@ -49,7 +49,13 @@
         <el-row :gutter="20" class="mgb20">
             <el-col :span="24">
                 <el-card shadow="hover" body-class="card-body">
+                    <div class="grab">
+                    <div style="width: 200px;padding-left: 25px;padding-bottom: 5px">爬取应用数据</div>
                     
+                    <el-input v-model="grabId" style="width: 200px;padding-left: 25px" placeholder="请输入爬取应用id"></el-input>
+                    <el-input v-model="grabNum" style="width: 200px;padding-left: 25px;padding-right: 25px;" placeholder="请输入爬取页数"></el-input>
+                    <el-button type="primary" :icon="Search" @click="grabData()">点击爬取</el-button>
+                    </div>
                 </el-card>
             </el-col>
            
@@ -137,6 +143,7 @@
 import countup from '@/components/countup.vue';
 import { use, registerMap } from 'echarts/core';
 import { BarChart, LineChart, PieChart, MapChart } from 'echarts/charts';
+import { Search } from '@element-plus/icons-vue';
 import {
     GridComponent,
     TooltipComponent,
@@ -148,6 +155,10 @@ import { CanvasRenderer } from 'echarts/renderers';
 import VChart from 'vue-echarts';
 import { dashOpt1, dashOpt2, mapOptions } from './chart/options';
 import chinaMap from '@/utils/china';
+import { ref } from 'vue';
+import request from '@/utils/request';
+import { ElMessage } from 'element-plus';
+
 use([
     CanvasRenderer,
     BarChart,
@@ -161,6 +172,22 @@ use([
     MapChart,
 ]);
 registerMap('china', chinaMap);
+const grabNum = ref();
+const grabId = ref();
+const grabData = async () =>{
+    const param = {
+        grabNum: grabNum.value,
+        grabId: grabId.value
+    }
+   
+    const res = await request.post('/api/run_script', param)
+
+    if(res.status ===200){
+        ElMessage.success('执行成功')
+    }else{
+        ElMessage.error('执行失败')
+    }
+}
 const activities = [
     {
         content: '收藏商品',
@@ -237,6 +264,8 @@ const ranks = [
 }
 </style>
 <style scoped>
+
+
 .card-content {
     flex: 1;
     text-align: center;

@@ -3,6 +3,7 @@ import axios, { AxiosInstance, AxiosError, AxiosResponse, InternalAxiosRequestCo
 const service: AxiosInstance = axios.create({
     timeout: 5000,
     baseURL:'http://127.0.0.1:5000/auth',
+    headers: { 'Content-Type': 'application/json' },
 });
 
 service.interceptors.request.use(
