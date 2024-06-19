@@ -14,7 +14,7 @@ tv2 = joblib.load(
 clf = joblib.load(
     r"C:\Users\17662\Desktop\数据库\dianping_textmining\数据库\评论爬取\文本分析挖掘\naive_bayes_model.pkl")
 
-infile = open("stopwords.txt", encoding='utf-8')
+infile = open(r"C:\Users\17662\Desktop\数据库\text-and-data\大众点评爬虫\stopwords.txt", encoding='utf-8')
 stopwords_lst = infile.readlines()
 stopwords = [x.strip() for x in stopwords_lst]
 
