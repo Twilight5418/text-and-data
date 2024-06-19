@@ -50,87 +50,21 @@
             <el-col :span="24">
                 <el-card shadow="hover" body-class="card-body">
                     <div class="grab">
-                    <div style="width: 200px;padding-left: 25px;padding-bottom: 5px">爬取应用数据</div>
-                    
-                    <el-input v-model="grabId" style="width: 200px;padding-left: 25px" placeholder="请输入爬取应用id"></el-input>
-                    <el-input v-model="grabNum" style="width: 200px;padding-left: 25px;padding-right: 25px;" placeholder="请输入爬取页数"></el-input>
-                    <el-button type="primary" :icon="Search" @click="grabData()">点击爬取</el-button>
+                        <div style="width: 200px; padding-left: 25px; padding-bottom: 5px">爬取应用数据</div>
+                        <el-input v-model="grabId" style="width: 200px; padding-left: 25px" placeholder="请输入爬取应用id"></el-input>
+                        <el-input v-model="grabNum" style="width: 200px; padding-left: 25px; padding-right: 25px;" placeholder="请输入爬取页数"></el-input>
+                        <el-button type="primary" :icon="Search" @click="grabData()">点击爬取</el-button>
+                        <el-button type="primary" @click="getImages">获取图片</el-button>
                     </div>
-                </el-card>
-            </el-col>
-           
-        </el-row>
-        <el-row :gutter="20" class="mgb20">
-            <el-col :span="18">
-                <el-card shadow="hover">
-                    <div class="card-header">
-                        <p class="card-header-title">订单动态</p>
-                        <p class="card-header-desc">最近一周订单状态，包括订单成交量和订单退货量</p>
-                    </div>
-                    <v-chart class="chart" :option="dashOpt1" />
-                </el-card>
-            </el-col>
-            <el-col :span="6">
-                <el-card shadow="hover">
-                    <div class="card-header">
-                        <p class="card-header-title">品类分布</p>
-                        <p class="card-header-desc">最近一个月销售商品的品类情况</p>
-                    </div>
-                    <v-chart class="chart" :option="dashOpt2" />
                 </el-card>
             </el-col>
         </el-row>
-        <el-row :gutter="20">
-            <el-col :span="7">
-                <el-card shadow="hover" :body-style="{ height: '400px' }">
-                    <div class="card-header">
-                        <p class="card-header-title">时间线</p>
-                        <p class="card-header-desc">最新的销售动态和活动信息</p>
-                    </div>
-                    <el-timeline>
-                        <el-timeline-item v-for="(activity, index) in activities" :key="index" :color="activity.color">
-                            <div class="timeline-item">
-                                <div>
-                                    <p>{{ activity.content }}</p>
-                                    <p class="timeline-desc">{{ activity.description }}</p>
-                                </div>
-                                <div class="timeline-time">{{ activity.timestamp }}</div>
-                            </div>
-                        </el-timeline-item>
-                    </el-timeline>
-                </el-card>
-            </el-col>
-            <el-col :span="10">
-                <el-card shadow="hover" :body-style="{ height: '400px' }">
-                    <div class="card-header">
-                        <p class="card-header-title">渠道统计</p>
-                        <p class="card-header-desc">最近一个月的订单来源统计</p>
-                    </div>
-                    <v-chart class="map-chart" :option="mapOptions" />
-                </el-card>
-            </el-col>
-            <el-col :span="7">
-                <el-card shadow="hover" :body-style="{ height: '400px' }">
-                    <div class="card-header">
-                        <p class="card-header-title">排行榜</p>
-                        <p class="card-header-desc">销售商品的热门榜单Top5</p>
-                    </div>
-                    <div>
-                        <div class="rank-item" v-for="(rank, index) in ranks">
-                            <div class="rank-item-avatar">{{ index + 1 }}</div>
-                            <div class="rank-item-content">
-                                <div class="rank-item-top">
-                                    <div class="rank-item-title">{{ rank.title }}</div>
-                                    <div class="rank-item-desc">销量：{{ rank.value }}</div>
-                                </div>
-                                <el-progress
-                                    :show-text="false"
-                                    striped
-                                    :stroke-width="10"
-                                    :percentage="rank.percent"
-                                    :color="rank.color"
-                                />
-                            </div>
+        <el-row :gutter="20" class="mgb20">
+            <el-col :span="24">
+                <el-card shadow="hover" body-class="card-body">
+                    <div class="images">
+                        <div v-for="image in images" :key="image" class="image-container">
+                            <img :src="`/api/get_image/${image}`" alt="Generated Image" />
                         </div>
                     </div>
                 </el-card>
@@ -139,132 +73,64 @@
     </div>
 </template>
 
-<script setup lang="ts" name="dashboard">
-import countup from '@/components/countup.vue';
-import { use, registerMap } from 'echarts/core';
-import { BarChart, LineChart, PieChart, MapChart } from 'echarts/charts';
-import { Search } from '@element-plus/icons-vue';
-import {
-    GridComponent,
-    TooltipComponent,
-    LegendComponent,
-    TitleComponent,
-    VisualMapComponent,
-} from 'echarts/components';
-import { CanvasRenderer } from 'echarts/renderers';
-import VChart from 'vue-echarts';
-import { dashOpt1, dashOpt2, mapOptions } from './chart/options';
-import chinaMap from '@/utils/china';
+<script setup lang="ts">
 import { ref } from 'vue';
-import request from '@/utils/request';
 import { ElMessage } from 'element-plus';
+import request from '@/utils/request';
+import { Search } from '@element-plus/icons-vue';
+import countup from '@/components/countup.vue';
 
-use([
-    CanvasRenderer,
-    BarChart,
-    GridComponent,
-    LineChart,
-    PieChart,
-    TooltipComponent,
-    LegendComponent,
-    TitleComponent,
-    VisualMapComponent,
-    MapChart,
-]);
-registerMap('china', chinaMap);
 const grabNum = ref();
 const grabId = ref();
-const grabData = async () =>{
+const images = ref([]);
+
+const grabData = async () => {
+    if (!grabNum.value || !grabId.value) {
+        ElMessage.error('请提供抓取的页数和应用ID');
+        return;
+    }
+
     const param = {
         grabNum: grabNum.value,
         grabId: grabId.value
-    }
-   
-    const res = await request.post('/api/run_script', param)
+    };
 
-    if(res.status ===200){
-        ElMessage.success('执行成功')
-    }else{
-        ElMessage.error('执行失败')
-    }
-}
-const activities = [
-    {
-        content: '收藏商品',
-        description: 'xxx收藏了你的商品，就是不买',
-        timestamp: '30分钟前',
-        color: '#00bcd4',
-    },
-    {
-        content: '用户评价',
-        description: 'xxx给了某某商品一个差评，吐血啊',
-        timestamp: '55分钟前',
-        color: '#1ABC9C',
-    },
-    {
-        content: '订单提交',
-        description: 'xxx提交了订单，快去收钱吧',
-        timestamp: '1小时前',
-        color: '#3f51b5',
-    },
-    {
-        content: '退款申请',
-        description: 'xxx申请了仅退款，又要亏钱了',
-        timestamp: '15小时前',
-        color: '#f44336',
-    },
-    {
-        content: '商品上架',
-        description: '运营专员瞒着你上架了一辆飞机',
-        timestamp: '1天前',
-        color: '#009688',
-    },
-];
+    try {
+        const res = await request.post('/api/run_script', param);
 
-const ranks = [
-    {
-        title: '手机',
-        value: 10000,
-        percent: 80,
-        color: '#f25e43',
-    },
-    {
-        title: '电脑',
-        value: 8000,
-        percent: 70,
-        color: '#00bcd4',
-    },
-    {
-        title: '相机',
-        value: 6000,
-        percent: 60,
-        color: '#64d572',
-    },
-    {
-        title: '衣服',
-        value: 5000,
-        percent: 55,
-        color: '#e9a745',
-    },
-    {
-        title: '书籍',
-        value: 4000,
-        percent: 50,
-        color: '#009688',
-    },
-];
+        if (res.status === 200) {
+            ElMessage.success('执行成功');
+        } else {
+            ElMessage.error('执行失败');
+        }
+    } catch (error) {
+        ElMessage.error('执行失败');
+    }
+};
+
+const getImages = async () => {
+    try {
+        const res = await request.post('/api/run_analysis');
+
+        if (res.status === 200) {
+            images.value = res.data.images;
+            ElMessage.success('获取图片成功');
+        } else {
+            ElMessage.error('获取图片失败');
+        }
+    } catch (error) {
+        ElMessage.error('获取图片失败');
+    }
+};
 </script>
 
-<style>
+<style scoped>
 .card-body {
     display: flex;
     align-items: center;
     height: 100px;
     padding: 0;
 }
-</style>
-<style scoped>
-
 
 .card-content {
     flex: 1;
@@ -319,75 +185,20 @@ const ranks = [
     color: #e9a745;
 }
 
-.chart {
+.images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.image-container {
     width: 100%;
-    height: 400px;
-}
-
-.card-header {
-    padding-left: 10px;
-    margin-bottom: 20px;
-}
-
-.card-header-title {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 5px;
-}
-
-.card-header-desc {
-    font-size: 14px;
-    color: #999;
-}
-
-.timeline-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 16px;
-    color: #000;
-}
-
-.timeline-time,
-.timeline-desc {
-    font-size: 12px;
-    color: #787878;
-}
-
-.rank-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.rank-item-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #f2f2f2;
     text-align: center;
-    line-height: 40px;
-    margin-right: 10px;
 }
 
-.rank-item-content {
-    flex: 1;
-}
-
-.rank-item-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: #343434;
-    margin-bottom: 10px;
-}
-
-.rank-item-desc {
-    font-size: 14px;
-    color: #999;
-}
-.map-chart {
-    width: 100%;
-    height: 350px;
+.image-container img {
+    max-width: 100%;
+    height: auto;
 }
 </style>
