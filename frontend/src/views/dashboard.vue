@@ -1,51 +1,6 @@
 <template>
     <div>
-        <el-row :gutter="20" class="mgb20">
-            <el-col :span="6">
-                <el-card shadow="hover" body-class="card-body">
-                    <el-icon class="card-icon bg1">
-                        <User />
-                    </el-icon>
-                    <div class="card-content">
-                        <countup class="card-num color1" :end="6666" />
-                        <div>用户访问量</div>
-                    </div>
-                </el-card>
-            </el-col>
-            <el-col :span="6">
-                <el-card shadow="hover" body-class="card-body">
-                    <el-icon class="card-icon bg2">
-                        <ChatDotRound />
-                    </el-icon>
-                    <div class="card-content">
-                        <countup class="card-num color2" :end="168" />
-                        <div>系统消息</div>
-                    </div>
-                </el-card>
-            </el-col>
-            <el-col :span="6">
-                <el-card shadow="hover" body-class="card-body">
-                    <el-icon class="card-icon bg3">
-                        <Goods />
-                    </el-icon>
-                    <div class="card-content">
-                        <countup class="card-num color3" :end="8888" />
-                        <div>商品数量</div>
-                    </div>
-                </el-card>
-            </el-col>
-            <el-col :span="6">
-                <el-card shadow="hover" body-class="card-body">
-                    <el-icon class="card-icon bg4">
-                        <ShoppingCartFull />
-                    </el-icon>
-                    <div class="card-content">
-                        <countup class="card-num color4" :end="568" />
-                        <div>今日订单量</div>
-                    </div>
-                </el-card>
-            </el-col>
-        </el-row>
+
         <el-row :gutter="20" class="mgb20">
             <el-col :span="24">
                 <el-card shadow="hover" body-class="card-body">
@@ -59,12 +14,34 @@
                 </el-card>
             </el-col>
         </el-row>
+      <el-row :gutter="20" class="mgb20">
+            <el-col :span="24">
+                <el-card shadow="hover" body-class="card-body">
+                    <div class="grab">
+                        <div style="width: 200px; padding-left: 25px; padding-bottom: 5px">爬取的评论信息</div>
+                        <el-input v-model="searchComment" style="width: 200px; padding-left: 25px" placeholder="请输入..."></el-input>
+                        <el-button type="primary" @click="searchComments">搜索评论</el-button>
+                         <el-table :data="comments" style="width: 100%">
+                              <el-table-column prop="comment_text" label="评论内容" />
+                              <el-table-column prop="flavor" label="口味" />
+                              <el-table-column prop="environment" label="环境" />
+                              <el-table-column prop="service" label="服务" />
+                              <el-table-column prop="rating" label="评分" />
+                              <el-table-column prop="user_id" label="用户ID" />
+                              <el-table-column prop="shop_id" label="商店ID" />
+                              <el-table-column prop="comment_date" label="评论日期" />
+                              <el-table-column prop="sentiment_score" label="情感得分" />
+                         </el-table>
+                    </div>
+                </el-card>
+            </el-col>
+        </el-row>
         <el-row :gutter="20" class="mgb20">
             <el-col :span="24">
                 <el-card shadow="hover" body-class="card-body">
                     <div class="images">
                         <div v-for="image in images" :key="image" class="image-container">
-                            <img :src="`/api/get_image/${image}`" alt="Generated Image" />
+                            <img :src="`/assets/img/${image}`" alt="Generated Image" />
                         </div>
                     </div>
                 </el-card>
@@ -83,6 +60,26 @@ import countup from '@/components/countup.vue';
 const grabNum = ref();
 const grabId = ref();
 const images = ref([]);
+const comments = ref([])
+
+const  searchComment = ref()
+const searchComments = async () => {
+    try {
+        const response = await request.get('/comments/api/comments', {
+            params: { query: searchComment.value }
+        });
+        if (response.status === 200) {
+            comments.value = response.data;
+            ElMessage.success('搜索成功');
+        } else {
+            ElMessage.error('搜索失败');
+        }
+    } catch (error) {
+        ElMessage.error('搜索失败');
+    }
+}
+
+
 
 const grabData = async () => {
     if (!grabNum.value || !grabId.value) {
@@ -96,7 +93,7 @@ const grabData = async () => {
     };
 
     try {
-        const res = await request.post('/api/run_script', param);
+        const res = await request.post('/auth/api/run_script', param);
 
         if (res.status === 200) {
             ElMessage.success('执行成功');
@@ -110,7 +107,7 @@ const grabData = async () => {
 
 const getImages = async () => {
     try {
-        const res = await request.post('/api/run_analysis');
+        const res = await request.post('/auth/api/run_analysis');
 
         if (res.status === 200) {
             images.value = res.data.images;
@@ -125,6 +122,20 @@ const getImages = async () => {
 </script>
 
 <style scoped>
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+th {
+  background-color: #f4f4f4;
+}
 .card-body {
     display: flex;
     align-items: center;

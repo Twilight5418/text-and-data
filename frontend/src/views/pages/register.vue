@@ -79,7 +79,7 @@ const register = ref<FormInstance>();
             try {
                 // 这里使用 toRaw 将响应式对象转换为普通对象
                 const rawParam = toRaw(param);
-                const res = await request.post('/api/register', rawParam);
+                const res = await request.post('/auth/api/register', rawParam);
                 console.log(res);
                 
                 if (res.data.code === 200) {

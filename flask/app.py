@@ -3,7 +3,7 @@ from flask import Flask, send_file, jsonify, request
 from flask_cors import CORS
 from config import Config
 from models import db
-from routes import bp as auth_bp
+from routes import bp as auth_bp, comment_bp
 import subprocess
 
 app = Flask(__name__)
@@ -11,7 +11,7 @@ app.config.from_object(Config)
 
 db.init_app(app)
 app.register_blueprint(auth_bp, url_prefix='/auth')
-
+app.register_blueprint(comment_bp, url_prefix='/comments')
 # 配置 CORS
 CORS(app)
 

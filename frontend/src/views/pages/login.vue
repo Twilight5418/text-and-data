@@ -82,7 +82,7 @@ const submitForm = async (formEl: FormInstance | undefined) => {
         const valid = await formEl.validate();
         if (valid) {
             // 发送登录请求
-            const res = await request.post('/api/login', param);
+            const res = await request.post('/auth/api/login', param);
             console.log(res);
             
             // 检查响应数据

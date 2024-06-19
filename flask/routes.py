@@ -1,12 +1,14 @@
-from flask import Blueprint, request, send_file,jsonify
-from models import db, User
+from flask import Blueprint, request, send_file, jsonify
+from models import db, User, Comment
 import subprocess
 import os
 import logging
+from datetime import datetime
 bp = Blueprint('auth', __name__)
 
 # 初始化日志记录
 logging.basicConfig(level=logging.DEBUG)
+
 
 @bp.route('/api/register', methods=['POST'])
 def register():
@@ -63,7 +65,8 @@ def run_script():
             encoding='utf-8',  # 设置编码为 UTF-8
             check=True
         )
-        return jsonify({'status': 'success', 'message': 'main.py script executed successfully!', 'output': result.stdout})
+        return jsonify(
+            {'status': 'success', 'message': 'main.py script executed successfully!', 'output': result.stdout})
     except subprocess.CalledProcessError as e:
         return jsonify({'code': 500, 'message': 'Script execution failed', 'error': e.stderr}), 500
 
@@ -120,3 +123,43 @@ def run_analysis():
     except Exception as e:
         logging.error(f"Error running analysis: {e}")
         return jsonify({'code': 500, 'message': str(e)}), 500
+
+
+comment_bp = Blueprint('comment', __name__)
+
+
+@comment_bp.route('/api/comments', methods=['GET'])
+@comment_bp.route('/api/comments', methods=['GET'])
+def get_comments():
+    search_query = request.args.get('query', '')
+
+    if search_query:
+        comments = Comment.query.filter(
+            Comment.comment_text.like(f'%{search_query}%')
+        ).all()
+    else:
+        comments = Comment.query.all()
+
+    comments_list = []
+    for comment in comments:
+        comment_date = comment.comment_date
+        try:
+            # 解析字符串日期为 datetime 对象，使用正确的格式
+            comment_date_parsed = datetime.strptime(comment_date, "%Y-%m-%d %H:%M")
+            comment_date_iso = comment_date_parsed.isoformat()
+        except ValueError:
+            comment_date_iso = comment_date  # 如果解析失败，则保持原字符串格式
+
+        comments_list.append({
+            'comment_text': comment.comment_text,
+            'flavor': comment.flavor,
+            'environment': comment.environment,
+            'service': comment.service,
+            'rating': comment.rating,
+            'user_id': comment.user_id,
+            'shop_id': comment.shop_id,
+            'comment_date': comment_date_iso,
+            'sentiment_score': comment.sentiment_score
+        })
+
+    return jsonify(comments_list)
