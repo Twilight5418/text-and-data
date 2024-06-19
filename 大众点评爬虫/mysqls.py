@@ -1,27 +1,48 @@
+# mysqls.py
 import pymysql
-import uuid
-import jieba
 import joblib
+import jieba
 import pandas as pd
+import uuid
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud
 from sqlalchemy import create_engine
 
 # 加载模型和停用词
-tv2 = joblib.load(r"C:\Users\17662\Desktop\数据库\dianping_textmining\数据库\评论爬取\文本分析挖掘\tfidf_vectorizer.pkl")
-clf = joblib.load(r"C:\Users\17662\Desktop\数据库\dianping_textmining\数据库\评论爬取\文本分析挖掘\naive_bayes_model.pkl")
+tv2 = joblib.load(
+    r"C:\Users\17662\Desktop\数据库\dianping_textmining\数据库\评论爬取\文本分析挖掘\tfidf_vectorizer.pkl")
+clf = joblib.load(
+    r"C:\Users\17662\Desktop\数据库\dianping_textmining\数据库\评论爬取\文本分析挖掘\naive_bayes_model.pkl")
 
 infile = open("stopwords.txt", encoding='utf-8')
 stopwords_lst = infile.readlines()
 stopwords = [x.strip() for x in stopwords_lst]
+
 
 # 中文分词函数
 def fenci(train_data):
     words_df = train_data.apply(lambda x: ' '.join(jieba.cut(x)))
     return words_df
 
+
 # 定义分析函数
 def fenxi(strings):
     strings_fenci = fenci(pd.Series([strings]))
     return float(clf.predict_proba(tv2.transform(strings_fenci))[:, 1])
+
+
+def connect_db():
+    return pymysql.connect(
+        host="localhost",
+        user="root",
+        password="5457hzcx",
+        database="TESTDB",
+        charset='utf8mb4',
+        connect_timeout=60,
+        read_timeout=300,
+        write_timeout=300
+    )
+
 
 def create_table(cursor):
     """
@@ -43,7 +64,7 @@ def create_table(cursor):
 
     cursor.execute("DROP TABLE IF EXISTS 评论")
     sql = '''CREATE TABLE 评论 (
-            评论id INT AUTO_INCREMENT PRIMARY KEY,
+            评论id VARCHAR(100) PRIMARY KEY,
             应用id VARCHAR(100),
             评论内容 TEXT,
             口味 VARCHAR(55),
@@ -66,21 +87,17 @@ def create_table(cursor):
     cursor.execute(sql)
     print("表评论统计创建成功")
 
-# 连接MYSQL数据库
-def connect_db():
-    return pymysql.connect(
-        host="localhost",
-        user="root",
-        password="5457hzcx",
-        database="TESTDB",
-        charset='utf8mb4',
-        connect_timeout=60,
-        read_timeout=300,
-        write_timeout=300
-    )
+    cursor.execute("DROP TABLE IF EXISTS 评论分词表")
+    sql = '''CREATE TABLE 评论分词表(
+                shopID VARCHAR(55),
+                word VARCHAR(255),
+                frequency FLOAT
+                );'''
+    cursor.execute(sql)
+    print("表评论分词表创建成功")
 
-# 存储爬取到的数据
-def save_data(data_dict):
+
+def save_data(cursor, data_dict, db):
     # 获取评论内容
     comment_text = data_dict['cus_comment']
     # 调用情感分析函数获取评分
@@ -130,10 +147,23 @@ def save_data(data_dict):
         print('数据库写入失败:', e)
     return
 
-def close_sql():
+
+def generate_wordcloud_and_save(cursor, texts, shopID, db):
+    text = ' '.join(texts)
+    wc = WordCloud(font_path="msyh.ttc", background_color='white', max_words=100, stopwords=stopwords,
+                   max_font_size=80, random_state=42, margin=3).generate(text)
+
+    plt.imshow(wc, interpolation="bilinear")
+    plt.axis("off")
+    plt.show()
+
+    word_freq = wc.words_
+    for word, freq in word_freq.items():
+        sql_word = '''INSERT INTO 评论分词表(shopID, word, frequency) VALUES(%s, %s, %s)'''
+        cursor.execute(sql_word, (shopID, word, freq))
+    db.commit()
+
+
+def close_sql(cursor, db):
     cursor.close()
     db.close()
-
-db = connect_db()
-cursor = db.cursor()
-create_table(cursor)
