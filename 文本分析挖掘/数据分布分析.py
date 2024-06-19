@@ -19,7 +19,7 @@ def ciyun(shop_ID='all'):#词云寻找
     if shop_ID == 'all':
         text = ' '.join(texts)
     else:
-        text = ' '.join(texts[data['shopID'] == shop_ID])
+        text = ' '.join(texts[data['shop_id'] == shop_ID])
 
     wc = WordCloud(font_path="msyh.ttc", background_color='white', max_words=100, stopwords=stopwords,
                    max_font_size=80, random_state=42, margin=3)  # 配置词云参数
@@ -68,7 +68,7 @@ plt.title('Distribution of Stars')
 plt.xlabel('Stars')
 plt.ylabel('Count')
 plt.show()
-sns.boxplot(data=data,x='shopID',y='stars')
+sns.boxplot(data=data,x='shop_id',y='comment_star')
 plt.show()
 
 #时间提取
@@ -102,7 +102,7 @@ infile = open("stopwords.txt",encoding='utf-8')
 stopwords_lst = infile.readlines()
 STOPWORDS = [x.strip() for x in stopwords_lst]
 stopwords = set(STOPWORDS) #设置停用词
-data['shopID'].unique()
+data['shop_id'].unique()
 # 绘制图表
 # 词云
 ciyun('521698')
