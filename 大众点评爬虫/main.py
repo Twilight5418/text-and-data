@@ -5,7 +5,7 @@ Created on Mon Jul  9 16:42:52 2018
 @author: bin
 """
 
-#目标爬取店铺的评论
+# 目标爬取店铺的评论
 
 import requests
 from bs4 import BeautifulSoup
@@ -17,7 +17,7 @@ import os
 
 ua = UserAgent()
 
-#设置cookies
+# 设置cookies
 cookie = ("_lxsdk_cuid=18f140237dcc8-0233cb317ee2a8-4c657b58-190140-18f140237dcc8; "
           "_lxsdk=18f140237dcc8-0233cb317ee2a8-4c657b58-190140-18f140237dcc8; "
           "_hc.v=5aed5439-6a4d-e693-2a27-1f47e19b99b9.1714027642; "
@@ -32,51 +32,53 @@ cookie = ("_lxsdk_cuid=18f140237dcc8-0233cb317ee2a8-4c657b58-190140-18f140237dcc
           "_lx_utm=utm_source%3DBaidu%26utm_medium%3Dorganic; "
           "_lxsdk_s=190050d6ebd-e29-f5c-870%7C%7C60")
 
-#修改请求头
+# 修改请求头
 headers = {
-        'User-Agent':ua.random,
-        'Cookie':cookie,
-        'Connection':'keep-alive',
-        'Host':'www.dianping.com',
-        'Referer': 'http://www.dianping.com/shop/521698/review_all/p6'
+    'User-Agent': ua.random,
+    'Cookie': cookie,
+    'Connection': 'keep-alive',
+    'Host': 'www.dianping.com',
+    'Referer': 'http://www.dianping.com/shop/521698/review_all/p6'
 }
 
-#从ip代理池中随机获取ip
-#ips = open('proxies.txt','r').read().split('\n')
-#
-#def get_random_ip():
-#    ip = random.choice(ips)
-#    pxs = {ip.split(':')[0]:ip}
-#    return pxs
-
-#获取html页面
-def getHTMLText(url,code="utf-8"):
+# 获取html页面
+def getHTMLText(url, code="utf-8"):
+    """
+    发送HTTP请求获取HTML页面内容，并返回页面的文本。
+    """
     try:
-        time.sleep(random.random()*6 + 2)
-        r=requests.get(url, timeout = 5, headers=headers, 
-#                       proxies=get_random_ip()
-                       )
+        time.sleep(random.random() * 6 + 2)
+        r = requests.get(url, timeout=5, headers=headers)
         r.raise_for_status()
         r.encoding = code
         return r.text
-    except:
-        print("产生异常")
+    except Exception as e:
+        print("产生异常:", e)
         return "产生异常"
 
-#因为评论中带有emoji表情，是4个字符长度的，mysql数据库不支持4个字符长度，因此要进行过滤
+# 因为评论中带有emoji表情，是4个字符长度的，mysql数据库不支持4个字符长度，因此要进行过滤
 def remove_emoji(text):
+    """
+    移除评论中的emoji表情。
+    """
     try:
         highpoints = re.compile(u'[\U00010000-\U0010ffff]')
     except re.error:
         highpoints = re.compile(u'[\uD800-\uDBFF][\uDC00-\uDFFF]')
-    return highpoints.sub(u'',text)
+    return highpoints.sub(u'', text)
 
-#从html中提起所需字段信息
+# 从html中提取所需字段信息
 def parsePage(html, shopID):
+    """
+    解析HTML页面，提取所需的字段信息，并返回包含这些信息的字典列表。
+    """
     infoList = []  # 用于存储提取后的信息，列表的每一项都是一个字典
     soup = BeautifulSoup(html, "html.parser")
 
     for item in soup.find_all('div', class_='main-review'):
+        # 提取评论ID，假设评论ID存储在 'data-reviewid' 属性中
+        comment_id = item.get('data-reviewid')
+
         cus_id = item.find('a', class_='name').text.strip()
         comment_time = item.find('span', class_='time').text.strip()
         try:
@@ -95,6 +97,7 @@ def parsePage(html, shopID):
             kouwei = huanjing = fuwu = '无'
 
         infoList.append({
+            'comment_id': comment_id,
             'cus_id': cus_id,
             'comment_time': comment_time,
             'comment_star': comment_star,
@@ -106,32 +109,39 @@ def parsePage(html, shopID):
         })
     return infoList
 
-#构造每一页的url，并且对爬取的信息进行存储
-def getCommentinfo(shop_url, shpoID, page_begin, page_end):
+
+# 构造每一页的url，并且对爬取的信息进行存储
+def getCommentinfo(shop_url, shopID, page_begin, page_end):
+    """
+    构造每一页的URL，调用getHTMLText和parsePage函数获取并存储爬取的信息。
+    """
     for i in range(page_begin, page_end):
         try:
             url = shop_url + 'p' + str(i)
             html = getHTMLText(url)
-            infoList = parsePage(html,shpoID)
-            print('成功爬取第{}页数据,有评论{}条'.format(i,len(infoList)))
+            infoList = parsePage(html, shopID)
+            print('成功爬取第{}页数据,有评论{}条'.format(i, len(infoList)))
             for info in infoList:
                 mysqls.save_data(info)
-            #断点续传中的断点
+            # 断点续传中的断点
             if (html != "产生异常") and (len(infoList) != 0):
-                with open('xuchuan.txt','a') as file:
-                    duandian = str(i)+'\n'
+                with open('xuchuan.txt', 'a') as file:
+                    duandian = str(i) + '\n'
                     file.write(duandian)
             else:
                 print('休息60s...')
                 time.sleep(60)
-        except:
-            print('跳过本次')
+        except Exception as e:
+            print('跳过本次:', e)
             continue
     return
 
 def xuchuan():
+    """
+    读取断点续传文件，获取当前爬取的页码。
+    """
     if os.path.exists('xuchuan.txt'):
-        file = open('xuchuan.txt','r')
+        file = open('xuchuan.txt', 'r')
         nowpage = int(file.readlines()[-1])
         file.close()
     else:
@@ -139,6 +149,9 @@ def xuchuan():
     return nowpage
 
 def delete_file(filename):
+    """
+    删除指定的文件。
+    """
     try:
         os.remove(filename)
         print(f"文件 {filename} 已成功删除")
@@ -149,11 +162,14 @@ def delete_file(filename):
     except Exception as e:
         print(f"错误：无法删除文件 {filename}。错误信息：{e}")
 
-#根据店铺id，店铺页码进行爬取
-def craw_comment(shopID='521698',page = 5):
+# 根据店铺id，店铺页码进行爬取
+def craw_comment(shopID='521698', page=5):
+    """
+    根据店铺ID和页码爬取评论，并进行断点续传。
+    """
     delete_file('xuchuan.txt')
     shop_url = "http://www.dianping.com/shop/" + shopID + "/review_all/"
-    #读取断点续传中的续传断点
+    # 读取断点续传中的续传断点
     nowpage = xuchuan()
     getCommentinfo(shop_url, shopID, page_begin=nowpage+1, page_end=page+1)
     mysqls.close_sql()
@@ -161,4 +177,3 @@ def craw_comment(shopID='521698',page = 5):
 
 if __name__ == "__main__":
     craw_comment()
-        
