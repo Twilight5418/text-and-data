@@ -7,7 +7,6 @@ from fake_useragent import UserAgent
 import os
 import uuid
 import mysqls
-from mysqls import  create_table,close_sql
 
 ua = UserAgent()
 
@@ -47,8 +46,8 @@ def getHTMLText(url, code="utf-8"):
         r.encoding = code
         return r.text
     except Exception as e:
-        print("产生异常:", e)
-        return "产生异常"
+        print("Exception occurred:", e)
+        return "Exception occurred"
 
 # 因为评论中带有emoji表情，是4个字符长度的，mysql数据库不支持4个字符长度，因此要进行过滤
 def remove_emoji(text):
@@ -85,11 +84,11 @@ def parsePage(html, shopID):
         scores = str(item.find('span', class_='score'))
 
         try:
-            kouwei = re.search(r'口味：(\d+)', scores).group(1)
-            huanjing = re.search(r'环境：(\d+)', scores).group(1)
-            fuwu = re.search(r'服务：(\d+)', scores).group(1)
+            flavor = re.search(r'口味：(\d+)', scores).group(1)
+            environment = re.search(r'环境：(\d+)', scores).group(1)
+            service = re.search(r'服务：(\d+)', scores).group(1)
         except AttributeError:
-            kouwei = huanjing = fuwu = '无'
+            flavor = environment = service = 'N/A'
 
         infoList.append({
             'comment_id': comment_id,
@@ -97,10 +96,10 @@ def parsePage(html, shopID):
             'comment_time': comment_time,
             'comment_star': comment_star,
             'cus_comment': remove_emoji(cus_comment),
-            'kouwei': kouwei,
-            'huanjing': huanjing,
-            'fuwu': fuwu,
-            'shopID': shopID
+            'flavor': flavor,
+            'environment': environment,
+            'service': service,
+            'shop_id': shopID
         })
 
     return infoList
@@ -116,20 +115,20 @@ def getCommentinfo(shop_url, shopID, page_begin, page_end, cursor, db):
             url = shop_url + 'p' + str(i)
             html = getHTMLText(url)
             infoList = parsePage(html, shopID)
-            print('成功爬取第{}页数据,有评论{}条'.format(i, len(infoList)))
+            print('Successfully scraped page {} with {} comments'.format(i, len(infoList)))
             for info in infoList:
                 mysqls.save_data(cursor, info, db)
                 comments.append(info['cus_comment'])
             # 断点续传中的断点
-            if (html != "产生异常") and (len(infoList) != 0):
+            if (html != "Exception occurred") and (len(infoList) != 0):
                 with open('xuchuan.txt', 'a') as file:
                     duandian = str(i) + '\n'
                     file.write(duandian)
             else:
-                print('休息60s...')
+                print('Taking a break for 60s...')
                 time.sleep(60)
         except Exception as e:
-            print('跳过本次:', e)
+            print('Skipping this time:', e)
             continue
 
     if comments:
@@ -155,13 +154,13 @@ def delete_file(filename):
     """
     try:
         os.remove(filename)
-        print(f"文件 {filename} 已成功删除")
+        print(f"File {filename} deleted successfully")
     except FileNotFoundError:
-        print(f"错误：文件 {filename} 未找到")
+        print(f"Error: File {filename} not found")
     except PermissionError:
-        print(f"错误：没有权限删除文件 {filename}")
+        print(f"Error: No permission to delete file {filename}")
     except Exception as e:
-        print(f"错误：无法删除文件 {filename}。错误信息：{e}")
+        print(f"Error: Could not delete file {filename}. Error: {e}")
 
 # 根据店铺id，店铺页码进行爬取
 def craw_comment(shopID='521698', page=5):
@@ -181,6 +180,6 @@ def craw_comment(shopID='521698', page=5):
 if __name__ == "__main__":
     db = mysqls.connect_db()
     cursor = db.cursor()
-    create_table(cursor)
+    mysqls.create_table(cursor)
     craw_comment()
-    close_sql(cursor, db)
+    mysqls.close_sql(cursor, db)

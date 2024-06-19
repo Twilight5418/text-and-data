@@ -54,47 +54,47 @@ def create_table(cursor):
             comment_time VARCHAR(55),
             comment_star VARCHAR(55),
             cus_comment TEXT,
-            kouwei VARCHAR(55),
-            huanjing VARCHAR(55),
-            fuwu VARCHAR(55),
-            shopID VARCHAR(55)
+            flavor VARCHAR(55),
+            environment VARCHAR(55),
+            service VARCHAR(55),
+            shop_id VARCHAR(55)
             );'''
     cursor.execute(sql)
-    print("表DZDP创建成功")
+    print("Table DZDP created successfully")
 
-    cursor.execute("DROP TABLE IF EXISTS 评论")
-    sql = '''CREATE TABLE 评论 (
-            评论id VARCHAR(100) PRIMARY KEY,
-            应用id VARCHAR(100),
-            评论内容 TEXT,
-            口味 VARCHAR(55),
-            环境 VARCHAR(55),
-            服务 VARCHAR(55),
-            评分 VARCHAR(55),
-            评论用户id VARCHAR(100),
-            商店id VARCHAR(55),
-            评论日期 VARCHAR(55),
-            情感评分 VARCHAR(55)
+    cursor.execute("DROP TABLE IF EXISTS Comments")
+    sql = '''CREATE TABLE Comments (
+            comment_id VARCHAR(100) PRIMARY KEY,
+            app_id VARCHAR(100),
+            comment_text TEXT,
+            flavor VARCHAR(55),
+            environment VARCHAR(55),
+            service VARCHAR(55),
+            rating VARCHAR(55),
+            user_id VARCHAR(100),
+            shop_id VARCHAR(55),
+            comment_date VARCHAR(55),
+            sentiment_score VARCHAR(55)
         );'''
     cursor.execute(sql)
-    print("表评论创建成功")
+    print("Table Comments created successfully")
 
-    cursor.execute("DROP TABLE IF EXISTS 评论统计")
-    sql = '''CREATE TABLE 评论统计(
-                评论用户id VARCHAR(100) PRIMARY KEY,
-                评论数  INT
+    cursor.execute("DROP TABLE IF EXISTS CommentStats")
+    sql = '''CREATE TABLE CommentStats(
+                user_id VARCHAR(100) PRIMARY KEY,
+                comment_count INT
                 );'''
     cursor.execute(sql)
-    print("表评论统计创建成功")
+    print("Table CommentStats created successfully")
 
-    cursor.execute("DROP TABLE IF EXISTS 评论分词表")
-    sql = '''CREATE TABLE 评论分词表(
-                shopID VARCHAR(55),
+    cursor.execute("DROP TABLE IF EXISTS CommentWords")
+    sql = '''CREATE TABLE CommentWords(
+                shop_id VARCHAR(55),
                 word VARCHAR(255),
                 frequency FLOAT
                 );'''
     cursor.execute(sql)
-    print("表评论分词表创建成功")
+    print("Table CommentWords created successfully")
 
 
 def save_data(cursor, data_dict, db):
@@ -103,38 +103,38 @@ def save_data(cursor, data_dict, db):
     # 调用情感分析函数获取评分
     sentiment_score = fenxi(comment_text)
 
-    sql_dzdp = '''INSERT INTO DZDP(cus_id, comment_time, comment_star, cus_comment, kouwei, huanjing, fuwu, shopID) 
+    sql_dzdp = '''INSERT INTO DZDP(cus_id, comment_time, comment_star, cus_comment, flavor, environment, service, shop_id) 
                   VALUES(%s, %s, %s, %s, %s, %s, %s, %s)'''
     value_tup_dzdp = (
         data_dict['cus_id'],
         data_dict['comment_time'],
         data_dict['comment_star'],
         data_dict['cus_comment'],
-        data_dict['kouwei'],
-        data_dict['huanjing'],
-        data_dict['fuwu'],
-        data_dict['shopID']
+        data_dict['flavor'],
+        data_dict['environment'],
+        data_dict['service'],
+        data_dict['shop_id']
     )
 
-    sql_comments = '''INSERT INTO 评论(评论id, 应用id, 评论内容, 口味, 环境, 服务, 评分, 评论用户id, 商店id, 评论日期, 情感评分) 
+    sql_comments = '''INSERT INTO Comments(comment_id, app_id, comment_text, flavor, environment, service, rating, user_id, shop_id, comment_date, sentiment_score) 
                       VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'''
     value_tup_comments = (
         data_dict['comment_id'],  # 评论id
         25,  # 默认应用id
         data_dict['cus_comment'],  # 评论内容
-        data_dict['kouwei'],  # 口味
-        data_dict['huanjing'],  # 环境
-        data_dict['fuwu'],  # 服务
+        data_dict['flavor'],  # 口味
+        data_dict['environment'],  # 环境
+        data_dict['service'],  # 服务
         data_dict['comment_star'],  # 评分
         data_dict['cus_id'],  # 评论用户id
-        data_dict['shopID'],  # 商店id
+        data_dict['shop_id'],  # 商店id
         data_dict['comment_time'],  # 评论日期
         sentiment_score  # 情感评分
     )
 
-    sql_update_statistics = '''INSERT INTO 评论统计 (评论用户id, 评论数)
+    sql_update_statistics = '''INSERT INTO CommentStats (user_id, comment_count)
                                VALUES (%s, 1)
-                               ON DUPLICATE KEY UPDATE 评论数 = 评论数 + 1'''
+                               ON DUPLICATE KEY UPDATE comment_count = comment_count + 1'''
     value_tup_statistics = (data_dict['cus_id'],)
 
     try:
@@ -144,11 +144,11 @@ def save_data(cursor, data_dict, db):
         db.commit()
     except Exception as e:
         db.rollback()
-        print('数据库写入失败:', e)
+        print('Failed to write to database:', e)
     return
 
 
-def generate_wordcloud_and_save(cursor, texts, shopID, db):
+def generate_wordcloud_and_save(cursor, texts, shop_id, db):
     text = ' '.join(texts)
     wc = WordCloud(font_path="msyh.ttc", background_color='white', max_words=100, stopwords=stopwords,
                    max_font_size=80, random_state=42, margin=3).generate(text)
@@ -159,8 +159,8 @@ def generate_wordcloud_and_save(cursor, texts, shopID, db):
 
     word_freq = wc.words_
     for word, freq in word_freq.items():
-        sql_word = '''INSERT INTO 评论分词表(shopID, word, frequency) VALUES(%s, %s, %s)'''
-        cursor.execute(sql_word, (shopID, word, freq))
+        sql_word = '''INSERT INTO CommentWords(shop_id, word, frequency) VALUES(%s, %s, %s)'''
+        cursor.execute(sql_word, (shop_id, word, freq))
     db.commit()
 
 
