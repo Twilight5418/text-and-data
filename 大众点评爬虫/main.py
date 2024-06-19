@@ -68,23 +68,26 @@ def remove_emoji(text):
     return highpoints.sub(u'', text)
 
 # 从html中提取所需字段信息
-def parsePage(html, shopID):
+def parsePage(html, shopID, starting_id=1):
     """
     解析HTML页面，提取所需的字段信息，并返回包含这些信息的字典列表。
     """
     infoList = []  # 用于存储提取后的信息，列表的每一项都是一个字典
     soup = BeautifulSoup(html, "html.parser")
 
+    current_id = starting_id  # 初始化评论ID
+
     for item in soup.find_all('div', class_='main-review'):
-        # 提取评论ID，假设评论ID存储在 'data-reviewid' 属性中
-        comment_id = item.get('data-reviewid')
+        # 提取评论ID，如果不存在则生成一个唯一的评论ID
+        comment_id = item.get('data-reviewid', str(current_id))
 
         cus_id = item.find('a', class_='name').text.strip()
         comment_time = item.find('span', class_='time').text.strip()
         try:
-            comment_star = item.find('span', class_=re.compile('sml-rank-stars')).get('class')[1]
+            comment_star_class = item.find('span', class_=re.compile('sml-rank-stars')).get('class')[1]
+            comment_star = float(re.search(r'\d+', comment_star_class).group()) / 10
         except:
-            comment_star = 'NAN'
+            comment_star = 0.0
 
         cus_comment = item.find('div', class_="review-words").text.strip()
         scores = str(item.find('span', class_='score'))
@@ -107,6 +110,9 @@ def parsePage(html, shopID):
             'fuwu': fuwu,
             'shopID': shopID
         })
+
+        current_id += 1  # 递增评论ID
+
     return infoList
 
 

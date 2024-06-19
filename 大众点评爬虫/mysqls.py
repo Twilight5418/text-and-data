@@ -27,7 +27,7 @@ def create_table(cursor):
     cursor.execute(sql)
 
     cursor.execute("DROP TABLE IF EXISTS 评论")
-    sql = '''CREATE TABLE 评论(
+    sql = '''CREATE TABLE 评论 (
             评论id INT AUTO_INCREMENT PRIMARY KEY,
             应用id VARCHAR(100),
             评论内容 TEXT,
@@ -38,27 +38,34 @@ def create_table(cursor):
             评论用户id VARCHAR(100),
             商店id VARCHAR(55),
             评论日期 VARCHAR(55)
-            );'''
+        );'''
     cursor.execute(sql)
 
+    cursor.execute("DROP TABLE IF EXISTS 评论统计")
+    sql = '''CREATE TABLE 评论统计(
+                评论用户id VARCHAR(100) PRIMARY KEY,
+                评论数  INT
+                );'''
+    cursor.execute(sql)
 
-# 连接MYSQL数据库
+    # 连接MYSQL数据库
 db = pymysql.connect(
     host="localhost",
     user="root",
     password="5457hzcx",
     database="TESTDB",
-    charset='utf8mb4'
+    charset='utf8mb4',
+    connect_timeout=10,  # 连接超时
+    read_timeout=300,    # 读取超时
+    write_timeout=300    # 写入超时
 )
 cursor = db.cursor()
 
 
 # 存储爬取到的数据
-# 存储爬取到的数据
-# 存储爬取到的数据
 def save_data(data_dict):
     """
-    将爬取的数据保存到DZDP和评论表中。
+    将爬取的数据保存到DZDP和评论表中，并更新评论统计表。
     """
     sql_dzdp = '''INSERT INTO DZDP(cus_id, comment_time, comment_star, cus_comment, kouwei, huanjing, fuwu, shopID) 
                   VALUES(%s, %s, %s, %s, %s, %s, %s, %s)'''
@@ -87,10 +94,15 @@ def save_data(data_dict):
         data_dict['comment_time']  # 评论日期
     )
 
+    sql_update_statistics = '''INSERT INTO 评论统计 (评论用户id, 评论数)
+                               VALUES (%s, 1)
+                               ON DUPLICATE KEY UPDATE 评论数 = 评论数 + 1'''
+    value_tup_statistics = (data_dict['cus_id'],)
 
     try:
         cursor.execute(sql_dzdp, value_tup_dzdp)
         cursor.execute(sql_comments, value_tup_comments)
+        cursor.execute(sql_update_statistics, value_tup_statistics)
         db.commit()
     except Exception as e:
         db.rollback()
@@ -105,3 +117,7 @@ def close_sql():
     """
     cursor.close()
     db.close()
+
+
+
+
