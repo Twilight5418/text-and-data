@@ -31,6 +31,10 @@
                               <el-table-column prop="shop_id" label="商店ID" />
                               <el-table-column prop="comment_date" label="评论日期" />
                               <el-table-column prop="sentiment_score" label="情感得分" />
+                            <el-table-column label="操作">
+                <template #default="scope">
+<el-button @click="deleteComment(scope.row.comment_id)" type="danger">删除</el-button>                </template>
+            </el-table-column>
                          </el-table>
                     </div>
                 </el-card>
@@ -78,8 +82,29 @@ const searchComments = async () => {
         ElMessage.error('搜索失败');
     }
 }
+const deleteComment = async (comment_id) => {
+    try {
+        const response = await request.delete('/comments/api/comments', {
+            params: { comment_id }
+        });
+        if (response.status === 200) {
+            ElMessage.success('删除成功');
+             const response = await request.get('/comments/api/comments', {
+            params: { query: searchComment.value }
+        });
+             if (response.status === 200) {
+            comments.value = response.data;
+        } else {
+            ElMessage.error('搜索失败');
+        }
 
-
+        } else {
+            ElMessage.error('删除失败');
+        }
+    } catch (error) {
+        ElMessage.error('删除失败');
+    }
+}
 
 const grabData = async () => {
     if (!grabNum.value || !grabId.value) {

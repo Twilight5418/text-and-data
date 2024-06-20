@@ -4,6 +4,7 @@ import subprocess
 import os
 import logging
 from datetime import datetime
+
 bp = Blueprint('auth', __name__)
 
 # 初始化日志记录
@@ -129,13 +130,12 @@ comment_bp = Blueprint('comment', __name__)
 
 
 @comment_bp.route('/api/comments', methods=['GET'])
-@comment_bp.route('/api/comments', methods=['GET'])
 def get_comments():
     search_query = request.args.get('query', '')
 
     if search_query:
         comments = Comment.query.filter(
-            Comment.comment_text.like(f'%{search_query}%')
+            Comment.user_id.like(f'%{search_query}%')
         ).all()
     else:
         comments = Comment.query.all()
@@ -151,6 +151,7 @@ def get_comments():
             comment_date_iso = comment_date  # 如果解析失败，则保持原字符串格式
 
         comments_list.append({
+            'comment_id': comment.comment_id,  # 确保返回 comment_id
             'comment_text': comment.comment_text,
             'flavor': comment.flavor,
             'environment': comment.environment,
@@ -163,3 +164,16 @@ def get_comments():
         })
 
     return jsonify(comments_list)
+
+
+@comment_bp.route('/api/comments', methods=['DELETE'])
+def delete_comment():
+    comment_id = request.args.get('comment_id')
+    comment = Comment.query.filter_by(comment_id=comment_id).first()
+
+    if comment:
+        db.session.delete(comment)
+        db.session.commit()
+        return jsonify({'message': 'Comment deleted successfully'}), 200
+    else:
+        return jsonify({'message': 'Comment not found'}), 404
